@@ -1,0 +1,7 @@
+# Team ephemeral files
+.team/output/
+.team/prompts/
+.team/docs-snapshot/
+
+# OS
+.DS_Store

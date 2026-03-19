@@ -1,0 +1,17 @@
+{
+  "project": "using-cmux",
+  "description": "using-cmux スキルパッケージ",
+  "phase": "implementation",
+  "created_at": "2026-03-19T12:56:00+09:00",
+  "agents": [],
+  "completed_outputs": [
+    ".team/output/architect.md",
+    ".team/output/reviewer-1.md",
+    ".team/output/reviewer-2.md",
+    ".team/output/implementer-1.md",
+    ".team/output/implementer-2.md",
+    ".team/output/implementer-3.md",
+    ".team/output/implementer-4.md",
+    ".team/output/implementer-5.md"
+  ]
+}
