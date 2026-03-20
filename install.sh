@@ -7,10 +7,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # インストール元
 SRC_SKILL="${SCRIPT_DIR}/skills/using-cmux/SKILL.md"
 SRC_COMMAND="${SCRIPT_DIR}/commands/cmux.md"
+SRC_CFORK="${SCRIPT_DIR}/commands/cfork.md"
 
 # インストール先
 DEST_SKILL="${HOME}/.claude/skills/using-cmux/SKILL.md"
 DEST_COMMAND="${HOME}/.claude/commands/cmux.md"
+DEST_CFORK="${HOME}/.claude/commands/cfork.md"
 
 # 色付き出力
 green() { printf '\033[32m%s\033[0m\n' "$1"; }
@@ -26,6 +28,10 @@ check_source_files() {
   fi
   if [[ ! -f "$SRC_COMMAND" ]]; then
     red "エラー: ソースファイルが見つかりません: ${SRC_COMMAND}"
+    missing=1
+  fi
+  if [[ ! -f "$SRC_CFORK" ]]; then
+    red "エラー: ソースファイルが見つかりません: ${SRC_CFORK}"
     missing=1
   fi
   if [[ $missing -eq 1 ]]; then
@@ -48,8 +54,14 @@ do_check() {
   else
     red "✗ ${DEST_COMMAND}"
   fi
+  if [[ -f "$DEST_CFORK" ]]; then
+    green "✓ ${DEST_CFORK}"
+    installed=$((installed + 1))
+  else
+    red "✗ ${DEST_CFORK}"
+  fi
 
-  if [[ $installed -eq 2 ]]; then
+  if [[ $installed -eq 3 ]]; then
     green "インストール済みです。"
     exit 0
   else
@@ -69,6 +81,11 @@ do_uninstall() {
   if [[ -f "$DEST_COMMAND" ]]; then
     rm "$DEST_COMMAND"
     green "削除: ${DEST_COMMAND}"
+    removed=$((removed + 1))
+  fi
+  if [[ -f "$DEST_CFORK" ]]; then
+    rm "$DEST_CFORK"
+    green "削除: ${DEST_CFORK}"
     removed=$((removed + 1))
   fi
 
@@ -96,6 +113,9 @@ do_install() {
   if [[ -f "$DEST_COMMAND" ]]; then
     yellow "既存ファイルを上書きします: ${DEST_COMMAND}"
   fi
+  if [[ -f "$DEST_CFORK" ]]; then
+    yellow "既存ファイルを上書きします: ${DEST_CFORK}"
+  fi
 
   # ディレクトリ作成
   mkdir -p "$(dirname "$DEST_SKILL")"
@@ -107,6 +127,9 @@ do_install() {
 
   cp "$SRC_COMMAND" "$DEST_COMMAND"
   green "インストール: ${DEST_COMMAND}"
+
+  cp "$SRC_CFORK" "$DEST_CFORK"
+  green "インストール: ${DEST_CFORK}"
 
   green "インストール完了。"
 }

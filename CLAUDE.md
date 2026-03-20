@@ -9,6 +9,7 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 |---------|------|
 | `skills/using-cmux/SKILL.md` | メインスキル定義（AI が読む） |
 | `commands/cmux.md` | `/cmux` スラッシュコマンド |
+| `commands/cfork.md` | `/cfork` 会話フォークコマンド |
 | `.claude-plugin/plugin.json` | Plugin マニフェスト |
 | `.claude-plugin/marketplace.json` | Marketplace カタログ |
 | `install.sh` | インストーラ |
