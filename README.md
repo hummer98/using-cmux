@@ -39,6 +39,24 @@ The existing [hashangit/cmux-skill](https://github.com/hashangit/cmux-skill) ded
 
 ## Installation
 
+### Option 1: Plugin (recommended)
+
+```bash
+claude /plugin install hummer98/using-cmux
+```
+
+Skills and commands are installed together.
+
+### Option 2: Agent Skills (skills only)
+
+```bash
+npx skills add hummer98/using-cmux
+```
+
+> Note: Commands (`/cmux`) are not included in Agent Skills distribution.
+
+### Option 3: Manual (legacy)
+
 ```bash
 git clone https://github.com/hummer98/using-cmux.git
 cd using-cmux
@@ -52,13 +70,13 @@ Installed files:
 | `~/.claude/skills/using-cmux/SKILL.md` | Main skill definition (auto-loaded by Claude Code) |
 | `~/.claude/commands/cmux.md` | `/cmux` slash command |
 
-### Verify Installation
+### Verify Installation (manual only)
 
 ```bash
 bash install.sh --check
 ```
 
-### Uninstall
+### Uninstall (manual only)
 
 ```bash
 bash install.sh --uninstall

@@ -1,0 +1,8 @@
+{
+  "name": "using-cmux",
+  "version": "1.0.0",
+  "description": "cmux ターミナル内での操作スキル。ペイン分割、サブエージェント起動・監視・結果回収、コマンド送信、画面読み取り、通知に使用。",
+  "author": "hummer98",
+  "license": "MIT",
+  "repository": "https://github.com/hummer98/using-cmux"
+}

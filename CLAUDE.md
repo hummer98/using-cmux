@@ -7,8 +7,10 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 
 | ファイル | 役割 |
 |---------|------|
-| `.claude/skills/using-cmux/SKILL.md` | メインスキル定義（AI が読む） |
-| `.claude/commands/cmux.md` | `/cmux` スラッシュコマンド |
+| `skills/using-cmux/SKILL.md` | メインスキル定義（AI が読む） |
+| `commands/cmux.md` | `/cmux` スラッシュコマンド |
+| `.claude-plugin/plugin.json` | Plugin マニフェスト |
+| `.claude-plugin/marketplace.json` | Marketplace カタログ |
 | `install.sh` | インストーラ |
 | `README.md` | 人間向けガイド |
 | `CLAUDE.md` | この開発ガイド |

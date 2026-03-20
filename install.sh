@@ -5,8 +5,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # インストール元
-SRC_SKILL="${SCRIPT_DIR}/.claude/skills/using-cmux/SKILL.md"
-SRC_COMMAND="${SCRIPT_DIR}/.claude/commands/cmux.md"
+SRC_SKILL="${SCRIPT_DIR}/skills/using-cmux/SKILL.md"
+SRC_COMMAND="${SCRIPT_DIR}/commands/cmux.md"
 
 # インストール先
 DEST_SKILL="${HOME}/.claude/skills/using-cmux/SKILL.md"
