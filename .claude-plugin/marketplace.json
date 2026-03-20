@@ -1,18 +1,23 @@
 {
-  "catalog": {
-    "skills": [
-      {
-        "name": "using-cmux",
-        "path": "skills/using-cmux/SKILL.md",
-        "description": "cmux ターミナル内での操作スキル。ペイン分割、サブエージェント起動・監視・結果回収、コマンド送信、画面読み取り、通知に使用。CMUX_* 環境変数が存在する場合にトリガーされる。"
-      }
-    ],
-    "commands": [
-      {
-        "name": "cmux",
-        "path": "commands/cmux.md",
-        "description": "cmux クイックリファレンス"
-      }
-    ]
-  }
+  "name": "hummer98-using-cmux",
+  "owner": {
+    "name": "hummer98",
+    "email": "github@hummer98"
+  },
+  "plugins": [
+    {
+      "name": "using-cmux",
+      "source": "./",
+      "description": "cmux ターミナル内での操作スキル。ペイン分割、サブエージェント起動・監視・結果回収、コマンド送信、画面読み取り、通知に使用。",
+      "version": "1.1.0",
+      "author": {
+        "name": "hummer98"
+      },
+      "repository": "https://github.com/hummer98/using-cmux",
+      "license": "MIT",
+      "keywords": ["claude-skill", "cmux", "terminal", "sub-agent", "multiplexer"],
+      "category": "terminal",
+      "tags": ["cmux", "terminal", "sub-agent", "multiplexer"]
+    }
+  ]
 }
