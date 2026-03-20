@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -n \"$CMUX_SURFACE_ID\" ]; then NUM=$(cmux identify | jq -r '.caller.surface_ref | split(\":\")[1]'); cmux rename-tab \"[$NUM] Claude Code\"; fi"
+            "command": "if [ -n \"$CMUX_SURFACE_ID\" ]; then REF=$(cmux identify | jq -r '.caller.surface_ref'); NUM=$(echo \"$REF\" | cut -d: -f2); cmux rename-tab --surface \"$REF\" \"[$NUM] Claude Code\"; fi"
           }
         ]
       }
