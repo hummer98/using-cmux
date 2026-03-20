@@ -79,13 +79,25 @@ cmux read-screen --surface surface:S             # → 同上
 
 **理由**: `--surface` は caller と同一ワークスペース内のサーフェスのみ有効。他ワークスペースのサーフェスを指定すると CLI は "Surface is not a terminal" エラーを返す。`--workspace` はワークスペースの focused surface に自動解決され、cross-workspace でも正しく動作する。
 
+## ペイン再利用の原則
+
+新しいペイン/ワークスペースを作る前に、ユーザーが clear 済みの遊休ペインを探して再利用する。
+
+```bash
+cmux list-pane-surfaces                          # 全サーフェス一覧
+screen=$(cmux read-screen --surface surface:N)   # 各サーフェスの状態を確認
+# シェルプロンプト（$ や ❯）のみ → 遊休 → 再利用可能
+```
+
+遊休ペインがなければ通常通り `new-split` / `new-workspace` で作成する。
+
 ## サブエージェント操作パターン
 
 サブエージェントを起動し、タスクを委任し、結果を回収する一連の手順。
 
 **重要**: サブエージェントはメインエージェントとは別のワークスペースに配置する。同一ワークスペースだとペインの相互干渉が起きる。
 
-### Step 1: ワークスペース作成
+### Step 1: ワークスペース作成（または遊休ワークスペースの再利用）
 
 ```bash
 WS=$(cmux new-workspace --cwd $(pwd) | awk '{print $2}')
@@ -259,6 +271,7 @@ cmux にはブラウザ自動化機能もある。詳細は `cmux browser --help
 | `read-screen` の結果が空で諦める | `refresh-surfaces` を実行してからリトライ |
 | Trust プロンプトを見逃してハングする | 起動後に `read-screen` でポーリングして検出する |
 | `--surface` で他ワークスペースを操作 | `--workspace` を使う（cross-workspace 操作の注意 参照） |
+| 遊休ペインがあるのに新しく split する | `list-pane-surfaces` + `read-screen` で遊休ペインを探して再利用する |
 
 ## コマンドクイックリファレンス
 
