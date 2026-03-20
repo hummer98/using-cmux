@@ -1,87 +1,87 @@
+**[日本語](README.ja.md)** | English
+
 ![using-cmux](banner.jpeg)
 
 # using-cmux
 
-AI が cmux を操作するための Claude Code スキルパッケージ。
+A Claude Code skill package for AI-driven cmux terminal operations.
 
-## モチベーション
+## Motivation
 
-Claude Code の組み込み `Agent` ツールは便利だが、内部で何が起きているかが見えない。サブエージェントの出力を確認したり、途中で介入したりすることが困難で、デバッグや品質管理が難しい。
+Claude Code's built-in `Agent` tool is convenient, but what happens inside is opaque. It's difficult to inspect sub-agent output or intervene mid-task, making debugging and quality control challenging.
 
-**cmux を使えば、すべてが見える。** ターミナルマルチプレクサとして動作する cmux 上でサブエージェントを起動すれば、各エージェントの入出力をリアルタイムに確認でき、いつでも介入・修正できる。
+**With cmux, everything is visible.** By launching sub-agents on cmux — a terminal multiplexer — you can monitor each agent's I/O in real time and intervene at any point.
 
-既存の [hashangit/cmux-skill](https://github.com/hashangit/cmux-skill) はブラウザ自動化の記述が全体の約50%を占めており、サブエージェント操作という本来最も重要なユースケースが埋もれていた。本パッケージはその構成を見直し、**サブエージェント操作パターンを中核に据え直した**代替スキルである。
+The existing [hashangit/cmux-skill](https://github.com/hashangit/cmux-skill) dedicates roughly 50% of its content to browser automation, burying the most critical use case: sub-agent operations. This package restructures that content, **putting sub-agent operation patterns front and center**.
 
-## 概要
+## What's Included
 
-このスキルは以下の内容をカバーする:
+| Category | Description |
+|----------|-------------|
+| **Basic operations** | Pane splitting, workspace management, command sending, screen reading |
+| **Newline rules for `send`** | The most important rule — when to use `\n` vs. `send-key return` |
+| **Sub-agent launch pattern** | Full lifecycle: launch → trust detection → prompt → completion detection → result collection |
+| **`read-screen` troubleshooting** | Fixes for empty/stale output, `refresh-surfaces`, etc. |
+| **Notifications** | `cmux notify` (in-app) vs. `osascript` (macOS Notification Center) |
+| **Status & progress** | Sidebar status and progress bar control |
 
-| カテゴリ | 内容 |
-|---------|------|
-| **基本操作** | ペイン分割、ワークスペース管理、コマンド送信、画面読み取り |
-| **send の改行ルール** | 最も重要なルール。単一行の `\n` と複数行の `send-key return` の使い分け |
-| **サブエージェント起動パターン** | 起動 → Trust検出 → プロンプト送信 → 完了検出 → 結果回収の一連の手順 |
-| **read-screen トラブルシューティング** | 出力が空・古い場合の `refresh-surfaces` 等の対処法 |
-| **通知** | `cmux notify`（アプリ内）と `osascript`（macOS通知センター）の使い分け |
-| **ステータス・プログレス表示** | サイドバーステータスとプログレスバーの制御 |
+## Relationship with cmux-team
 
-## cmux-team との関係
+![Architecture](architecture.jpeg)
 
-![アーキテクチャ図](architecture.jpeg)
+- **using-cmux**: General-purpose cmux CLI operations. Covers the full lifecycle of a single sub-agent
+- **cmux-team**: Multi-agent orchestration. Handles team composition, task distribution, and synchronization. Built on top of using-cmux
 
-- **using-cmux**: cmux CLI の汎用操作スキル。1体のサブエージェントの起動から結果回収までをカバー
-- **cmux-team**: 複数エージェントのオーケストレーション。チーム構成・タスク分配・同期を担当。using-cmux の操作パターンを基盤として利用する
+## Prerequisites
 
-## 前提条件
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
+- [cmux](https://cmux.dev) installed, with Claude Code running inside a cmux session
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) がインストール済みであること
-- [cmux](https://cmux.dev) がインストール済みで、cmux セッション内で Claude Code を実行すること
-
-## インストール
+## Installation
 
 ```bash
-git clone https://github.com/yamamoto-yuka/using-cmux.git
+git clone https://github.com/hummer98/using-cmux.git
 cd using-cmux
 bash install.sh
 ```
 
-以下のファイルがインストールされる:
+Installed files:
 
-| インストール先 | 内容 |
-|---------------|------|
-| `~/.claude/skills/using-cmux/SKILL.md` | メインスキル定義（Claude Code が自動読み込み） |
-| `~/.claude/commands/cmux.md` | `/cmux` スラッシュコマンド |
+| Destination | Contents |
+|-------------|----------|
+| `~/.claude/skills/using-cmux/SKILL.md` | Main skill definition (auto-loaded by Claude Code) |
+| `~/.claude/commands/cmux.md` | `/cmux` slash command |
 
-### インストール確認
+### Verify Installation
 
 ```bash
 bash install.sh --check
 ```
 
-### アンインストール
+### Uninstall
 
 ```bash
 bash install.sh --uninstall
 ```
 
-## 使い方
+## Usage
 
-### スキルの自動トリガー
+### Auto-trigger
 
-cmux セッション内で Claude Code を起動すると、環境変数 `CMUX_SOCKET_PATH` の存在を検出してスキルが自動的にロードされる。特別な操作は不要。
+When Claude Code starts inside a cmux session, it detects the `CMUX_SOCKET_PATH` environment variable and automatically loads the skill. No manual setup required.
 
-Claude Code が cmux 操作の指示を受けると、SKILL.md に記述されたパターンに従って、ペイン分割・コマンド送信・サブエージェント起動などを実行する。
+When Claude Code receives cmux-related instructions, it follows the patterns in SKILL.md to perform pane splitting, command sending, sub-agent launching, and more.
 
-### `/cmux` コマンド
+### `/cmux` Command
 
-クイックリファレンスを表示する:
+Display the quick reference:
 
 ```
 /cmux
 ```
 
-コマンド一覧・基本的な使い方を手早く確認したいときに使う。
+Useful for quickly checking available commands and basic usage.
 
-## ライセンス
+## License
 
 [MIT](LICENSE)
