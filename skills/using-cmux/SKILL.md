@@ -28,7 +28,7 @@ cmux tree                        # トポロジー表示（階層構造）
 | ペイン分割 | `cmux new-split right` (left/up/down も可) |
 | 新ワークスペース | `cmux new-workspace --cwd $(pwd)` |
 | コマンド送信 | `cmux send --surface surface:N "command\n"` |
-| キー送信 | `cmux send-key --surface surface:N return` |
+| キー送信 | `cmux send-key --surface surface:N return` / `ctrl+c` / `ctrl+d` |
 | 画面読み取り | `cmux read-screen --surface surface:N [--scrollback]` |
 | サーフェス/WS 終了 | `cmux close-surface` / `cmux close-workspace` |
 | 一覧表示 | `cmux list-panes` / `cmux list-pane-surfaces` |
@@ -61,6 +61,22 @@ cmux send --surface surface:1 "line 1\nline 2\n"
 ```
 
 **ルール**: 末尾の `\n` 1個だけは Enter として機能する。文字列の途中に `\n` を入れても改行にはならない。
+
+## 制御キーの送信
+
+プロセス中断（Ctrl+C）などの制御キーは **`send-key`** で送る。`send` では送れない。
+
+```bash
+# ✅ 正しい方法
+cmux send-key --surface surface:N ctrl+c
+
+# ❌ 間違い — リテラルテキストが送られるだけ
+cmux send --surface surface:N "C-c"
+cmux send --surface surface:N "\x03"
+cmux send-key --surface surface:N "C-c"   # → Unknown key エラー
+```
+
+キー名は `ctrl+c`, `ctrl+d`, `ctrl+z`, `return`, `tab`, `escape` 等。`send-key --help` で確認可能。
 
 ## cross-workspace 操作の注意（重要）
 
@@ -271,6 +287,7 @@ cmux にはブラウザ自動化機能もある。詳細は `cmux browser --help
 | `read-screen` の結果が空で諦める | `refresh-surfaces` を実行してからリトライ |
 | Trust プロンプトを見逃してハングする | 起動後に `read-screen` でポーリングして検出する |
 | `--surface` で他ワークスペースを操作 | `--workspace` を使う（cross-workspace 操作の注意 参照） |
+| `send "C-c"` や `send "\x03"` で Ctrl+C を送る | `send-key ctrl+c` を使う（制御キーの送信 参照） |
 | 遊休ペインがあるのに新しく split する | `list-pane-surfaces` + `read-screen` で遊休ペインを探して再利用する |
 
 ## コマンドクイックリファレンス
