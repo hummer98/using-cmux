@@ -149,7 +149,7 @@ cmux send-key --workspace $WS return
 ```bash
 # 単一行
 cmux send --workspace $WS "指示テキスト\n"
-cmux set-status task "調査中" --icon hammer  # ステータスを設定
+cmux set-status $WS "調査中" --icon hammer  # ステータスを設定
 
 # 複数行（send-key return で改行）
 cmux send --workspace $WS "1行目の指示"
@@ -165,7 +165,7 @@ cmux send-key --workspace $WS return
 ### Step 7: 結果回収
 
 ```bash
-cmux clear-status task                                     # ステータスをクリア
+cmux clear-status $WS                                      # ステータスをクリア
 result=$(cmux read-screen --workspace $WS --scrollback)  # 全出力取得
 cmux close-workspace --workspace $WS                      # 不要なら閉じる
 ```
