@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# cmux-grid: ワークスペースのペインをグリッドレイアウトに整列
+#
+# Usage:
+#   cmux-grid              現在のワークスペースを自動グリッドに整列
+#   cmux-grid 2x3          指定次元のグリッドに整列
+#   cmux-grid --workspace workspace:7
+#
+# 動作原理:
+#   1. 全サーフェスを1つのペインに統合（タブ化）
+#   2. new-split down で行を作り、new-split right で列を作る
+#   3. move-surface でサーフェスを配置、骨格の空サーフェスを削除
+
+usage() {
+  echo "Usage: cmux-grid [RxC] [--workspace <ref>]"
+  echo ""
+  echo "  RxC               グリッド次元（例: 2x2, 2x3）。省略時は自動計算"
+  echo "  --workspace <ref>  対象ワークスペース（省略時: 現在のワークスペース）"
+  exit 0
+}
+
+# --- 引数パース ---
+WS="${CMUX_WORKSPACE_ID:-}"
+FORCE_ROWS=""
+FORCE_COLS=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --workspace) WS="$2"; shift 2 ;;
+    --help|-h) usage ;;
+    *x*)
+      FORCE_ROWS="${1%%x*}"
+      FORCE_COLS="${1##*x}"
+      shift ;;
+    *) WS="$1"; shift ;;
+  esac
+done
+
+if [[ -z "${CMUX_SOCKET_PATH:-}" ]]; then
+  echo "エラー: cmux 環境外です" >&2
+  exit 1
+fi
+
+if [[ -z "$WS" ]]; then
+  echo "エラー: ワークスペースが特定できません" >&2
+  exit 1
+fi
+
+# --- サーフェス収集 ---
+SURFACES=()
+
+while IFS= read -r pane_ref; do
+  while IFS= read -r line; do
+    surf=$(echo "$line" | grep -o 'surface:[0-9]*')
+    [[ -n "$surf" ]] && SURFACES+=("$surf")
+  done < <(cmux list-pane-surfaces --workspace "$WS" --pane "$pane_ref" 2>/dev/null)
+done < <(cmux list-panes --workspace "$WS" 2>/dev/null | grep -o 'pane:[0-9]*')
+
+N=${#SURFACES[@]}
+
+if [[ $N -le 1 ]]; then
+  echo "サーフェスが1つ以下です。整列不要。"
+  exit 0
+fi
+
+# --- グリッド次元計算 ---
+if [[ -n "$FORCE_ROWS" && -n "$FORCE_COLS" ]]; then
+  ROWS=$FORCE_ROWS
+  COLS=$FORCE_COLS
+  if [[ $((ROWS * COLS)) -lt $N ]]; then
+    echo "エラー: ${ROWS}x${COLS} < サーフェス数${N}" >&2
+    exit 1
+  fi
+else
+  # ceil(sqrt(N))
+  COLS=1
+  while [[ $((COLS * COLS)) -lt $N ]]; do
+    COLS=$((COLS + 1))
+  done
+  ROWS=$(( (N + COLS - 1) / COLS ))
+fi
+
+echo "サーフェス ${N}個 → ${ROWS}×${COLS} グリッド"
+
+# --- ヘルパー ---
+get_panes() {
+  cmux list-panes --workspace "$WS" 2>/dev/null | grep -o 'pane:[0-9]*'
+}
+
+# new-split で骨格ペインを作り、サーフェスを入れ替える
+# 引数: $1=方向, $2=基準surface, $3=配置するsurface
+# 出力: 新ペインのref
+scaffold_and_place() {
+  local dir="$1" base_surf="$2" target_surf="$3"
+
+  local result
+  result=$(cmux new-split "$dir" --workspace "$WS" --surface "$base_surf" 2>/dev/null)
+  local scaffold_surf
+  scaffold_surf=$(echo "$result" | grep -o 'surface:[0-9]*')
+
+  # 骨格サーフェスが入ったペインを特定
+  local new_pane=""
+  while IFS= read -r pane_ref; do
+    if cmux list-pane-surfaces --workspace "$WS" --pane "$pane_ref" 2>/dev/null | grep -q "$scaffold_surf"; then
+      new_pane="$pane_ref"
+      break
+    fi
+  done < <(get_panes)
+
+  if [[ -z "$new_pane" ]]; then
+    echo "警告: 骨格ペインを検出できません ($scaffold_surf)" >&2
+    return 1
+  fi
+
+  cmux move-surface --surface "$target_surf" --pane "$new_pane" --workspace "$WS" 2>/dev/null
+  cmux close-surface --surface "$scaffold_surf" --workspace "$WS" 2>/dev/null
+
+  echo "$new_pane"
+}
+
+# --- Step 1: 全サーフェスを先頭ペインに統合 ---
+ANCHOR=$(get_panes | head -1)
+
+for ((i = 1; i < N; i++)); do
+  cmux move-surface --surface "${SURFACES[$i]}" --pane "$ANCHOR" --workspace "$WS" 2>/dev/null || true
+done
+sleep 0.3
+
+echo "統合完了。グリッド構築中..."
+
+# --- Step 2: 行を作る (new-split down) ---
+ROW_PANES=("$ANCHOR")
+
+for ((r = 1; r < ROWS; r++)); do
+  start=$((r * COLS))
+  [[ $start -ge $N ]] && break
+
+  base_surf="${SURFACES[$(( (r - 1) * COLS ))]}"
+  new_pane=$(scaffold_and_place down "$base_surf" "${SURFACES[$start]}")
+  ROW_PANES+=("$new_pane")
+
+  # この行の残りサーフェスを同じペインに移動
+  for ((c = 1; c < COLS; c++)); do
+    idx=$((start + c))
+    [[ $idx -ge $N ]] && break
+    cmux move-surface --surface "${SURFACES[$idx]}" --pane "$new_pane" --workspace "$WS" 2>/dev/null || true
+  done
+done
+
+# --- Step 3: 各行内で列を作る (new-split right) ---
+for ((r = 0; r < ${#ROW_PANES[@]}; r++)); do
+  start=$((r * COLS))
+  row_count=$COLS
+  if [[ $((start + row_count)) -gt $N ]]; then
+    row_count=$((N - start))
+  fi
+
+  for ((c = 1; c < row_count; c++)); do
+    idx=$((start + c))
+    base_surf="${SURFACES[$((start + c - 1))]}"
+    scaffold_and_place right "$base_surf" "${SURFACES[$idx]}" >/dev/null
+  done
+done
+
+echo "✅ ${ROWS}×${COLS} グリッド完了"

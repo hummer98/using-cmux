@@ -9,12 +9,14 @@ SRC_SKILL="${SCRIPT_DIR}/skills/using-cmux/SKILL.md"
 SRC_COMMAND="${SCRIPT_DIR}/commands/cmux.md"
 SRC_CFORK="${SCRIPT_DIR}/commands/cfork.md"
 SRC_CFORK_BIN="${SCRIPT_DIR}/bin/cfork"
+SRC_GRID_BIN="${SCRIPT_DIR}/bin/cmux-grid"
 
 # インストール先
 DEST_SKILL="${HOME}/.claude/skills/using-cmux/SKILL.md"
 DEST_COMMAND="${HOME}/.claude/commands/cmux.md"
 DEST_CFORK="${HOME}/.claude/commands/cfork.md"
 DEST_CFORK_BIN="${HOME}/.local/bin/cfork"
+DEST_GRID_BIN="${HOME}/.local/bin/cmux-grid"
 
 # 色付き出力
 green() { printf '\033[32m%s\033[0m\n' "$1"; }
@@ -38,6 +40,10 @@ check_source_files() {
   fi
   if [[ ! -f "$SRC_CFORK_BIN" ]]; then
     red "エラー: ソースファイルが見つかりません: ${SRC_CFORK_BIN}"
+    missing=1
+  fi
+  if [[ ! -f "$SRC_GRID_BIN" ]]; then
+    red "エラー: ソースファイルが見つかりません: ${SRC_GRID_BIN}"
     missing=1
   fi
   if [[ $missing -eq 1 ]]; then
@@ -74,7 +80,14 @@ do_check() {
     red "✗ ${DEST_CFORK_BIN}"
   fi
 
-  if [[ $installed -eq 4 ]]; then
+  if [[ -f "$DEST_GRID_BIN" ]]; then
+    green "✓ ${DEST_GRID_BIN}"
+    installed=$((installed + 1))
+  else
+    red "✗ ${DEST_GRID_BIN}"
+  fi
+
+  if [[ $installed -eq 5 ]]; then
     green "インストール済みです。"
     exit 0
   else
@@ -104,6 +117,11 @@ do_uninstall() {
   if [[ -f "$DEST_CFORK_BIN" ]]; then
     rm "$DEST_CFORK_BIN"
     green "削除: ${DEST_CFORK_BIN}"
+    removed=$((removed + 1))
+  fi
+  if [[ -f "$DEST_GRID_BIN" ]]; then
+    rm "$DEST_GRID_BIN"
+    green "削除: ${DEST_GRID_BIN}"
     removed=$((removed + 1))
   fi
 
@@ -137,6 +155,9 @@ do_install() {
   if [[ -f "$DEST_CFORK_BIN" ]]; then
     yellow "既存ファイルを上書きします: ${DEST_CFORK_BIN}"
   fi
+  if [[ -f "$DEST_GRID_BIN" ]]; then
+    yellow "既存ファイルを上書きします: ${DEST_GRID_BIN}"
+  fi
 
   # ディレクトリ作成
   mkdir -p "$(dirname "$DEST_SKILL")"
@@ -156,6 +177,10 @@ do_install() {
   cp "$SRC_CFORK_BIN" "$DEST_CFORK_BIN"
   chmod +x "$DEST_CFORK_BIN"
   green "インストール: ${DEST_CFORK_BIN}"
+
+  cp "$SRC_GRID_BIN" "$DEST_GRID_BIN"
+  chmod +x "$DEST_GRID_BIN"
+  green "インストール: ${DEST_GRID_BIN}"
 
   green "インストール完了。"
 }
