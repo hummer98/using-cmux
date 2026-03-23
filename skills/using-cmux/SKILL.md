@@ -162,13 +162,19 @@ cmux send-key --workspace $WS return
 
 `❯` プロンプトの再表示を `read-screen --workspace $WS` でポーリングして検出。
 
-### Step 7: 結果回収
+### Step 7: 結果回収 & クリーンアップ
 
 ```bash
 cmux clear-status $WS                                      # ステータスをクリア
 result=$(cmux read-screen --workspace $WS --scrollback)  # 全出力取得
-cmux close-workspace --workspace $WS                      # 不要なら閉じる
+
+# クリーンアップ: Claude 終了 → ペイン閉じ
+cmux send --workspace $WS "/exit\n"
+sleep 2
+cmux close-workspace --workspace $WS                      # ワークスペースごと閉じる
 ```
+
+> **重要**: `/exit` だけでは Claude プロセスが終了するだけでペイン（surface）は残る。必ず `close-workspace`（または `close-surface`）でペインも閉じること。`sleep 2` は `/exit` の処理完了を待つため。
 
 ## new-workspace の PTY 遅延初期化問題（Issue #1472）
 
@@ -292,6 +298,7 @@ cmux にはブラウザ自動化機能もある。詳細は `cmux browser --help
 | `send "C-c"` や `send "\x03"` で Ctrl+C を送る | `send-key ctrl+c` を使う（制御キーの送信 参照） |
 | 遊休ペインがあるのに新しく split する | `list-pane-surfaces` + `read-screen` で遊休ペインを探して再利用する |
 | ワークスペースに名前を付けない | `rename-workspace` で用途を示す名前を付ける |
+| `/exit` だけでクリーンアップ完了と思う | `/exit` → `sleep 2` → `close-workspace` / `close-surface` でペインも閉じる |
 
 ## コマンドクイックリファレンス
 
