@@ -1,6 +1,6 @@
 {
   "name": "using-cmux",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Skill for operating cmux terminal multiplexer. Pane splitting, sub-agent spawning/monitoring/result collection, command sending, screen reading, and notifications.",
   "author": {
     "name": "hummer98"
@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -n \"$CMUX_SURFACE_ID\" ]; then REF=$(cmux identify | jq -r '.caller.surface_ref'); NUM=$(echo \"$REF\" | cut -d: -f2); cmux rename-tab --surface \"$REF\" \"[$NUM] Claude Code\"; fi"
+            "command": "if [ -n \"$CMUX_SURFACE_ID\" ] && [ -z \"$CMUX_NO_RENAME_TAB\" ]; then REF=$(cmux identify | jq -r '.caller.surface_ref'); NUM=$(echo \"$REF\" | cut -d: -f2); cmux rename-tab --surface \"$REF\" \"[$NUM] Claude Code\"; fi"
           }
         ]
       }

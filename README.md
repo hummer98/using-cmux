@@ -41,11 +41,12 @@ The existing [hashangit/cmux-skill](https://github.com/hashangit/cmux-skill) ded
 
 ### Option 1: Plugin (recommended)
 
-```bash
-claude /plugin install hummer98/using-cmux
+```
+/plugin marketplace add hummer98/using-cmux
+/plugin install using-cmux
 ```
 
-Skills and commands are installed together.
+Skills, commands, and hooks are installed together.
 
 ### Option 2: Agent Skills (skills only)
 
