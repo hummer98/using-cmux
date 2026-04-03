@@ -13,7 +13,8 @@ cmux はターミナルマルチプレクサ。ペイン分割、コマンド送
 ```bash
 cmux identify                    # 自分のワークスペース・サーフェスを確認
 cmux list-workspaces             # 全ワークスペース一覧
-cmux tree                        # トポロジー表示（階層構造）
+cmux list-panes                  # 現在のワークスペースのペイン一覧
+cmux list-pane-surfaces          # 全サーフェス一覧
 ```
 
 リソースは短縮 refs で参照する: `window:1`, `workspace:2`, `pane:3`, `surface:4`。
@@ -26,7 +27,7 @@ cmux tree                        # トポロジー表示（階層構造）
 | 操作 | コマンド |
 |------|---------|
 | ペイン分割 | `cmux new-split right` (left/up/down も可) |
-| 新ワークスペース | `cmux new-workspace --cwd $(pwd)` |
+| 新ワークスペース | `cmux new-workspace` |
 | コマンド送信 | `cmux send --surface surface:N "command\n"` |
 | キー送信 | `cmux send-key --surface surface:N return` / `ctrl+c` / `ctrl+d` |
 | 画面読み取り | `cmux read-screen --surface surface:N [--scrollback]` |
@@ -128,7 +129,7 @@ cmux rename-tab --surface $SURF "Researcher-1"
 ### Step 1b: 別ワークスペースに配置
 
 ```bash
-WS=$(cmux new-workspace --cwd $(pwd) | awk '{print $2}')
+WS=$(cmux new-workspace | awk '{print $2}')
 cmux rename-workspace --workspace $WS "Researcher-1"
 ```
 
@@ -206,16 +207,10 @@ macOS アクセシビリティ許可が必要（システム設定 → プライ
 
 ```bash
 # ワークスペース作成後に GUI 表示を強制する
-WS=$(cmux new-workspace --cwd $(pwd) | awk '{print $2}')
+WS=$(cmux new-workspace | awk '{print $2}')
 
 # ワークスペースのインデックスを取得
-WS_INDEX=$(cmux tree --json | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-for w in data['windows']:
-    for ws in w['workspaces']:
-        if ws['ref'] == '$WS':
-            print(ws['index'] + 1)")
+WS_INDEX=$(cmux list-workspaces | grep -n "$WS" | cut -d: -f1)
 
 # AppleScript でメニュークリック → PTY 初期化
 osascript -e "
@@ -316,7 +311,7 @@ cmux にはブラウザ自動化機能もある。詳細は `cmux browser --help
 
 | コマンド | 説明 |
 |---------|------|
-| `identify` / `tree` | 環境情報 / トポロジー表示 |
+| `identify` | 環境情報（ワークスペース・サーフェス確認） |
 | `list-workspaces` / `list-panes` / `list-pane-surfaces` | 一覧表示 |
 | `new-workspace` / `new-split <dir>` | ワークスペース・ペイン作成 |
 | `send` / `send-key` / `read-screen` | 入出力操作 |
