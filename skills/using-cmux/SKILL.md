@@ -82,6 +82,13 @@ cmux send-key --surface surface:N "C-c"   # → Unknown key エラー
 
 別ワークスペースのサーフェスを操作する場合、**`--surface` ではなく `--workspace` を使う**。
 
+**surface:N を渡されたら、まず `cmux tree` でどのワークスペースにあるか確認する。**
+
+```bash
+cmux tree   # → surface:N が workspace:M に属することを確認
+cmux read-screen --workspace workspace:M
+```
+
 ```bash
 # ✅ 正しい方法 — --workspace で指定（focused surface に自動解決）
 cmux send --workspace workspace:N "command\n"
@@ -248,7 +255,7 @@ end tell"
 | 長い出力が切れる | `--scrollback` を追加 |
 | 特定行数だけ欲しい | `--lines N` で行数指定 |
 | surface が見つからない | `cmux list-pane-surfaces` で refs を再確認 |
-| `Surface is not a terminal` | PTY 遅延初期化問題。上記ワークアラウンド参照 |
+| `Surface is not a terminal` | 別ワークスペースのサーフェスに `--surface` でアクセスしている → `cmux tree` でワークスペースを確認し `--workspace` を使う。または PTY 遅延初期化問題（上記ワークアラウンド参照） |
 
 `read-screen` の結果がおかしい場合は `cmux refresh-surfaces` → 再読み取りの順で試す。
 
@@ -456,7 +463,7 @@ cmux browser $BSURF tab list / new / switch 2 / close 2        # タブ管理
 | 同一ワークスペースのレイアウト崩れを放置 | `cmux-grid` で整列するか、別ワークスペースに配置する |
 | `read-screen` の結果が空で諦める | `refresh-surfaces` を実行してからリトライ |
 | Trust プロンプトを見逃してハングする | 起動後に `read-screen` でポーリングして検出する |
-| `--surface` で他ワークスペースを操作 | `--workspace` を使う（cross-workspace 操作の注意 参照） |
+| `--surface` で他ワークスペースを操作 | `cmux-read` / `cmux-send` / `cmux-send-key` を使う（自動解決） |
 | `send "C-c"` や `send "\x03"` で Ctrl+C を送る | `send-key ctrl+c` を使う（制御キーの送信 参照） |
 | 遊休ペインがあるのに新しく split する | `list-pane-surfaces` + `read-screen` で遊休ペインを探して再利用する |
 | ワークスペースに名前を付けない | `rename-workspace` で用途を示す名前を付ける |

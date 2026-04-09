@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# cmux-read: --surface surface:N を自動でワークスペースに解決して read-screen する
+#
+# Usage:
+#   cmux-read --surface surface:N [--scrollback] [--lines N]
+#   cmux-read --workspace workspace:N [...]  # そのまま通過
+
+_resolve_surface() {
+    local surface="$1"
+    cmux tree --json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for w in data.get('windows', []):
+    for ws in w.get('workspaces', []):
+        for pane in ws.get('panes', []):
+            for surf in pane.get('surfaces', []):
+                if surf.get('ref') == '${surface}':
+                    print(ws['ref'])
+                    sys.exit(0)
+sys.exit(1)
+" || { echo "エラー: ${surface} が見つかりません" >&2; exit 1; }
+}
+
+NEW_ARGS=()
+ARGS=("$@")
+i=0
+while [[ $i -lt ${#ARGS[@]} ]]; do
+    arg="${ARGS[$i]}"
+    if [[ "$arg" == "--surface" ]]; then
+        i=$((i + 1))
+        ws=$(_resolve_surface "${ARGS[$i]}")
+        NEW_ARGS+=("--workspace" "$ws")
+    else
+        NEW_ARGS+=("$arg")
+    fi
+    i=$((i + 1))
+done
+
+exec cmux read-screen "${NEW_ARGS[@]}"

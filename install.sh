@@ -10,6 +10,9 @@ SRC_COMMAND="${SCRIPT_DIR}/commands/cmux.md"
 SRC_CFORK="${SCRIPT_DIR}/commands/cfork.md"
 SRC_CFORK_BIN="${SCRIPT_DIR}/bin/cfork"
 SRC_GRID_BIN="${SCRIPT_DIR}/bin/cmux-grid"
+SRC_READ_BIN="${SCRIPT_DIR}/bin/cmux-read"
+SRC_SEND_BIN="${SCRIPT_DIR}/bin/cmux-send"
+SRC_SEND_KEY_BIN="${SCRIPT_DIR}/bin/cmux-send-key"
 
 # インストール先
 DEST_SKILL="${HOME}/.claude/skills/using-cmux/SKILL.md"
@@ -17,6 +20,9 @@ DEST_COMMAND="${HOME}/.claude/commands/cmux.md"
 DEST_CFORK="${HOME}/.claude/commands/cfork.md"
 DEST_CFORK_BIN="${HOME}/.local/bin/cfork"
 DEST_GRID_BIN="${HOME}/.local/bin/cmux-grid"
+DEST_READ_BIN="${HOME}/.local/bin/cmux-read"
+DEST_SEND_BIN="${HOME}/.local/bin/cmux-send"
+DEST_SEND_KEY_BIN="${HOME}/.local/bin/cmux-send-key"
 
 # 色付き出力
 green() { printf '\033[32m%s\033[0m\n' "$1"; }
@@ -44,6 +50,18 @@ check_source_files() {
   fi
   if [[ ! -f "$SRC_GRID_BIN" ]]; then
     red "エラー: ソースファイルが見つかりません: ${SRC_GRID_BIN}"
+    missing=1
+  fi
+  if [[ ! -f "$SRC_READ_BIN" ]]; then
+    red "エラー: ソースファイルが見つかりません: ${SRC_READ_BIN}"
+    missing=1
+  fi
+  if [[ ! -f "$SRC_SEND_BIN" ]]; then
+    red "エラー: ソースファイルが見つかりません: ${SRC_SEND_BIN}"
+    missing=1
+  fi
+  if [[ ! -f "$SRC_SEND_KEY_BIN" ]]; then
+    red "エラー: ソースファイルが見つかりません: ${SRC_SEND_KEY_BIN}"
     missing=1
   fi
   if [[ $missing -eq 1 ]]; then
@@ -86,8 +104,26 @@ do_check() {
   else
     red "✗ ${DEST_GRID_BIN}"
   fi
+  if [[ -f "$DEST_READ_BIN" ]]; then
+    green "✓ ${DEST_READ_BIN}"
+    installed=$((installed + 1))
+  else
+    red "✗ ${DEST_READ_BIN}"
+  fi
+  if [[ -f "$DEST_SEND_BIN" ]]; then
+    green "✓ ${DEST_SEND_BIN}"
+    installed=$((installed + 1))
+  else
+    red "✗ ${DEST_SEND_BIN}"
+  fi
+  if [[ -f "$DEST_SEND_KEY_BIN" ]]; then
+    green "✓ ${DEST_SEND_KEY_BIN}"
+    installed=$((installed + 1))
+  else
+    red "✗ ${DEST_SEND_KEY_BIN}"
+  fi
 
-  if [[ $installed -eq 5 ]]; then
+  if [[ $installed -eq 8 ]]; then
     green "インストール済みです。"
     exit 0
   else
@@ -124,6 +160,21 @@ do_uninstall() {
     green "削除: ${DEST_GRID_BIN}"
     removed=$((removed + 1))
   fi
+  if [[ -f "$DEST_READ_BIN" ]]; then
+    rm "$DEST_READ_BIN"
+    green "削除: ${DEST_READ_BIN}"
+    removed=$((removed + 1))
+  fi
+  if [[ -f "$DEST_SEND_BIN" ]]; then
+    rm "$DEST_SEND_BIN"
+    green "削除: ${DEST_SEND_BIN}"
+    removed=$((removed + 1))
+  fi
+  if [[ -f "$DEST_SEND_KEY_BIN" ]]; then
+    rm "$DEST_SEND_KEY_BIN"
+    green "削除: ${DEST_SEND_KEY_BIN}"
+    removed=$((removed + 1))
+  fi
 
   # 空ディレクトリの削除
   local skill_dir="${HOME}/.claude/skills/using-cmux"
@@ -158,6 +209,15 @@ do_install() {
   if [[ -f "$DEST_GRID_BIN" ]]; then
     yellow "既存ファイルを上書きします: ${DEST_GRID_BIN}"
   fi
+  if [[ -f "$DEST_READ_BIN" ]]; then
+    yellow "既存ファイルを上書きします: ${DEST_READ_BIN}"
+  fi
+  if [[ -f "$DEST_SEND_BIN" ]]; then
+    yellow "既存ファイルを上書きします: ${DEST_SEND_BIN}"
+  fi
+  if [[ -f "$DEST_SEND_KEY_BIN" ]]; then
+    yellow "既存ファイルを上書きします: ${DEST_SEND_KEY_BIN}"
+  fi
 
   # ディレクトリ作成
   mkdir -p "$(dirname "$DEST_SKILL")"
@@ -181,6 +241,18 @@ do_install() {
   cp "$SRC_GRID_BIN" "$DEST_GRID_BIN"
   chmod +x "$DEST_GRID_BIN"
   green "インストール: ${DEST_GRID_BIN}"
+
+  cp "$SRC_READ_BIN" "$DEST_READ_BIN"
+  chmod +x "$DEST_READ_BIN"
+  green "インストール: ${DEST_READ_BIN}"
+
+  cp "$SRC_SEND_BIN" "$DEST_SEND_BIN"
+  chmod +x "$DEST_SEND_BIN"
+  green "インストール: ${DEST_SEND_BIN}"
+
+  cp "$SRC_SEND_KEY_BIN" "$DEST_SEND_KEY_BIN"
+  chmod +x "$DEST_SEND_KEY_BIN"
+  green "インストール: ${DEST_SEND_KEY_BIN}"
 
   green "インストール完了。"
 }
