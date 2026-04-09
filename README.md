@@ -48,6 +48,13 @@ The existing [hashangit/cmux-skill](https://github.com/hashangit/cmux-skill) ded
 
 Skills, commands, and hooks are installed together.
 
+**To update:**
+
+```
+/plugin update using-cmux
+/reload-plugins
+```
+
 ### Option 2: Agent Skills (skills only)
 
 ```bash
