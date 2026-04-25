@@ -55,40 +55,15 @@ Skills, commands, and hooks are installed together.
 /reload-plugins
 ```
 
+> Note: To pick up changes in the `bin/` wrapper scripts (`cmux-read` etc.), you must restart the cmux session. The plugin's `bin/` path is baked into PATH at session start.
+
 ### Option 2: Agent Skills (skills only)
 
 ```bash
 npx skills add hummer98/using-cmux
 ```
 
-> Note: Commands (`/cmux`) are not included in Agent Skills distribution.
-
-### Option 3: Manual (legacy)
-
-```bash
-git clone https://github.com/hummer98/using-cmux.git
-cd using-cmux
-bash install.sh
-```
-
-Installed files:
-
-| Destination | Contents |
-|-------------|----------|
-| `~/.claude/skills/using-cmux/SKILL.md` | Main skill definition (auto-loaded by Claude Code) |
-| `~/.claude/commands/cmux.md` | `/cmux` slash command |
-
-### Verify Installation (manual only)
-
-```bash
-bash install.sh --check
-```
-
-### Uninstall (manual only)
-
-```bash
-bash install.sh --uninstall
-```
+> Note: Commands (`/cmux`) and wrapper scripts (`cmux-read` etc.) are not included in Agent Skills distribution. Use Option 1 for full functionality.
 
 ## Usage
 

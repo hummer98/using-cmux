@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${CMUX_SOCKET_PATH:-}" ]]; then
+  echo "エラー: cmux 内でのみ使用可能です" >&2
+  exit 1
+fi
+
+DIR="${1:-right}"
+S=$(cmux new-split "$DIR" | awk '{print $2}')
+cmux-send --surface "$S" "claude --continue --fork-session\n"
+echo "フォーク起動: $S (方向: $DIR)"

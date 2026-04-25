@@ -11,9 +11,10 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 | `commands/cmux.md` | `/cmux` スラッシュコマンド |
 | `commands/cfork.md` | `/cfork` 会話フォークコマンド |
 | `bin/cmux-grid` | ペインをグリッドレイアウトに整列するスクリプト |
+| `bin/cmux-read` `bin/cmux-send` `bin/cmux-send-key` | surface→workspace 自動解決ラッパー |
+| `bin/cfork` | `/cfork` 用シェルスクリプト |
 | `.claude-plugin/plugin.json` | Plugin マニフェスト |
 | `.claude-plugin/marketplace.json` | Marketplace カタログ |
-| `install.sh` | インストーラ |
 | `README.md` | 人間向けガイド |
 | `CLAUDE.md` | この開発ガイド |
 | `LICENSE` | MIT ライセンス |
@@ -51,15 +52,8 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 2. 新しい cmux コマンドが追加されたら SKILL.md を更新
 3. SKILL.md の行数が200行を大幅に超えていないか確認
 
-## テスト方法
+## 配布
 
-```bash
-# インストール状態を確認
-bash install.sh --check
+Plugin として配布する。`bin/` 配下のスクリプトは Claude Code が自動的に PATH に追加するため、ユーザー側でのセットアップは不要。skills/ commands/ も Plugin マニフェスト経由で読み込まれる。
 
-# インストール実行
-bash install.sh
-
-# アンインストール
-bash install.sh --uninstall
-```
+`/plugin update` 後、PATH に焼き込まれているのは旧バージョンのまま（セッション開始時に確定）。`bin/` の更新を反映するには cmux セッションの再起動が必要。
