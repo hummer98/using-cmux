@@ -9,7 +9,7 @@ set -euo pipefail
 
 _resolve_surface() {
     local surface="$1"
-    cmux tree --json | python3 -c "
+    cmux tree --all --json | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 for w in data.get('windows', []):
