@@ -9,7 +9,7 @@
       "name": "using-cmux",
       "source": "./",
       "description": "Skill for operating cmux terminal multiplexer. Pane splitting, sub-agent spawning/monitoring/result collection, command sending, screen reading, and notifications.",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "author": {
         "name": "hummer98"
       },

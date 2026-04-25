@@ -97,17 +97,18 @@ cmux send --surface surface:S "..."     # → 同上
 
 **理由**: 生の `cmux read-screen` / `cmux send` / `cmux send-key` の `--surface` は caller と同一ワークスペース内のサーフェスのみ有効。ラッパーは内部で `cmux tree --all --json` から workspace を解決し `--workspace` 経由で呼び直すため、cross-window でも動作する。`--workspace` 形式はそのまま通過するので、`new-workspace` フロー（後述）でも統一して使える。
 
-## ペイン再利用の原則
+## 新しい surface をデフォルトで作る
 
-新しいペイン/ワークスペースを作る前に、ユーザーが clear 済みの遊休ペインを探して再利用する。
+別文脈での実行が必要なら、**既存の surface を再利用せず `cmux new-split` で新規作成する**。既存ペインの状態（実行中プロセス、未保存の作業）を破壊するリスクがあるため、再利用は危険。
+
+**トリガー**: ユーザーが「別 surface で」「新しい surface で」「別ペインで」「split で」と指示した場合は、必ず `new-split` で新規作成する。現在の surface でそのまま実行してはいけない。
 
 ```bash
-cmux list-pane-surfaces                          # 全サーフェス一覧
-screen=$(cmux-read --surface surface:N)   # 各サーフェスの状態を確認
-# シェルプロンプト（$ や ❯）のみ → 遊休 → 再利用可能
+SURF=$(cmux new-split right | awk '{print $2}')
+cmux-send --surface $SURF "command\n"
+# 不要になったら閉じる
+cmux close-surface --surface $SURF
 ```
-
-遊休ペインがなければ通常通り `new-split` / `new-workspace` で作成する。
 
 ## サブエージェント操作パターン
 
@@ -473,7 +474,8 @@ cmux browser $BSURF tab list / new / switch 2 / close 2        # タブ管理
 | Trust プロンプトを見逃してハングする | 起動後に `cmux-read` でポーリングして検出する |
 | `cmux read-screen` / `cmux send` / `cmux send-key` を直接呼ぶ | `cmux-read` / `cmux-send` / `cmux-send-key` ラッパーを使う（surface→workspace 自動解決） |
 | `cmux-send "C-c"` や `cmux-send "\x03"` で Ctrl+C を送る | `cmux-send-key ctrl+c` を使う（制御キーの送信 参照） |
-| 遊休ペインがあるのに新しく split する | `list-pane-surfaces` + `cmux-read` で遊休ペインを探して再利用する |
+| 「別 surface で」と言われたのに現在の surface で実行する | `cmux new-split` で新規 surface を作ってからそこで実行する |
+| 既存 surface を再利用する | 実行中プロセスや状態を破壊するリスクがあるため、原則 `new-split` で新規作成する |
 | ワークスペースに名前を付けない | `rename-workspace` で用途を示す名前を付ける |
 | `/exit` だけでクリーンアップ完了と思う | `/exit` → `sleep 2` → `close-workspace` / `close-surface` でペインも閉じる |
 
