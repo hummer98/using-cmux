@@ -320,6 +320,23 @@ textbox [ref=e3]
 | `--selector css` | 特定要素のみ |
 | `--cursor` | カーソル位置情報を含む |
 
+### snapshot vs screenshot の使い分け
+
+**原則: `screenshot` は視覚レイアウトのバグ調査でしか使わない。** PNG はトークンを大量消費する。値・状態・テキスト・構造の確認はすべてテキストベースのコマンドで行う。
+
+| 確認したいこと | 使うコマンド |
+|--------------|------------|
+| 入力フィールドの値 | `get value eN` |
+| 要素のテキスト内容 | `get text eN` |
+| 要素の属性（href, src 等） | `get attr eN <name>` |
+| チェックボックスの状態 | `is checked eN` |
+| 表示・有効状態 | `is visible eN` / `is enabled eN` |
+| ページ上の要素を探して操作する | `snapshot --interactive` |
+| DOM 構造・階層を確認する | `snapshot` |
+| 視覚レイアウトのバグ調査 | `screenshot`（最終手段） |
+
+**判断基準**: 「目で確認したい」と思っても、その情報が DOM から取れるなら snapshot / get 系を使う。screenshot を選ぶ前に「これは `get value` / `get text` / `snapshot` で取れないか？」を必ず自問する。フォーム送信前の値確認、入力結果の検証、要素の存在確認はすべて DOM から取れる。
+
 ### 要素の操作
 
 セレクタには CSS セレクタまたはスナップショットの ref（`e2` 等）を使う。`--snapshot-after` で操作後に自動でスナップショットを取得できる。
@@ -402,24 +419,11 @@ cmux browser $BSURF dialog accept "入力テキスト" # prompt に入力
 ```bash
 cmux browser $BSURF scroll --dy 500                    # 下に 500px
 cmux browser $BSURF scroll --selector "#list" --dy 200 # 要素内スクロール
-cmux browser $BSURF screenshot --out ~/Desktop/cap.png
+cmux browser $BSURF screenshot --out ~/Desktop/cap.png  # ⚠️ トークン大消費。snapshot / get 系で代替できないか必ず検討
 cmux browser $BSURF highlight e3                        # 要素をハイライト
 cmux browser $BSURF console list                        # コンソールメッセージ
 cmux browser $BSURF errors list                         # JavaScript エラー
 ```
-
-### snapshot vs screenshot の使い分け
-
-**原則: 要素を操作・確認する目的では `snapshot` を使う。`screenshot` はトークンを大量消費するため最終手段にとどめる。**
-
-| 目的 | 使うコマンド | 理由 |
-|------|------------|------|
-| ページ上の要素を探して操作する | `snapshot --interactive` | テキストで返るため低コスト。ref で直接操作可能 |
-| テキスト内容・構造を確認する | `snapshot` | DOM ツリーをテキストで取得 |
-| 視覚的レイアウトの確認が必要 | `screenshot` | PNG 画像（トークン大） |
-| デバッグで目視確認したい | `screenshot` | スナップショットで判断できない場合のみ |
-
-`screenshot` を使いたくなったらまず `snapshot` で代替できないか検討すること。
 
 ### セッション・状態管理
 
@@ -454,6 +458,7 @@ cmux browser $BSURF tab list / new / switch 2 / close 2        # タブ管理
 | ナビゲーション後に古い ref を使う | 遷移後は再スナップショット（ref は DOM 変更で無効化） |
 | `dialog` を無視してハングする | クリック前後に `dialog accept/dismiss` を仕込む |
 | iframe 内の要素が見つからない | `frame selector` で切り替えてから操作する |
+| フォーム値や DOM 状態を `screenshot` で確認する | `get value` / `get attr` / `get text` / `is checked` / `snapshot` で取得する。`screenshot` は視覚レイアウトのバグ調査限定 |
 
 ## 環境変数
 
