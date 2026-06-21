@@ -30,8 +30,9 @@ while [[ $i -lt ${#ARGS[@]} ]]; do
     arg="${ARGS[$i]}"
     if [[ "$arg" == "--surface" ]]; then
         i=$((i + 1))
-        ws=$(_resolve_surface "${ARGS[$i]}")
-        NEW_ARGS+=("--workspace" "$ws")
+        surf="${ARGS[$i]}"
+        ws=$(_resolve_surface "$surf")
+        NEW_ARGS+=("--workspace" "$ws" "--surface" "$surf")
     else
         NEW_ARGS+=("$arg")
     fi
