@@ -8,11 +8,15 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 | ファイル | 役割 |
 |---------|------|
 | `skills/using-cmux/SKILL.md` | メインスキル定義（AI が読む） |
+| `skills/ctab/SKILL.md` | `ctab` スキル定義（タブタイトルの付け方と番号維持ルール） |
 | `commands/cmux.md` | `/cmux` スラッシュコマンド |
 | `commands/cfork.md` | `/cfork` 会話フォークコマンド |
+| `commands/ctab.md` | `/ctab` タブタイトル変更コマンド |
+| `.claude/commands/release.md` | `/release` リリースコマンド（このリポジトリ自身の運用用） |
 | `bin/cmux-grid` | ペインをグリッドレイアウトに整列するスクリプト |
 | `bin/cmux-read` `bin/cmux-send` `bin/cmux-send-key` | surface→workspace 自動解決ラッパー |
 | `bin/cfork` | `/cfork` 用シェルスクリプト |
+| `bin/ctab` | `/ctab` 用シェルスクリプト（`[surface番号]` を維持して rename） |
 | `.claude-plugin/plugin.json` | Plugin マニフェスト |
 | `.claude-plugin/marketplace.json` | Marketplace カタログ |
 | `README.md` | 人間向けガイド |
@@ -60,7 +64,7 @@ Plugin として配布する。`bin/` 配下のスクリプトは Claude Code �
 
 ## bin/ 更新の検証手順
 
-`bin/cmux-*` `bin/cfork` 等を変更した後、**現在のセッション内で動作確認してはいけない**。PATH がセッション開始時の旧バージョンに固定されているため、修正済みのスクリプトを呼んでいるつもりで旧版を実行してしまう。
+`bin/cmux-*` `bin/cfork` `bin/ctab` 等を変更した後、**現在のセッション内で動作確認してはいけない**。PATH がセッション開始時の旧バージョンに固定されているため、修正済みのスクリプトを呼んでいるつもりで旧版を実行してしまう。
 
 正しい検証手順:
 

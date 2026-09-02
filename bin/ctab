@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# ctab — cmux / c11 のタブタイトルを [surface番号] を維持したまま変更する
+#
+#   ctab                          現在の番号・タイトル・説明を表示するだけ
+#   ctab "新しいタイトル"
+#   ctab "新しいタイトル" "説明（サブタイトル）"
+#
+# 番号は (1) identify / surface ref (2) $CMUX_SURFACE_NUM / $C11_SURFACE_NUM
+# (3) 現タイトルの先頭 [NNN] の順に解決する。生きた情報を優先するのは、
+# 誤った番号が一度タイトルに入っても次回の実行で直るようにするため。
+# どれでも解決できなければ rename せずに中止する（番号なしのタイトルを書かない）。
+set -uo pipefail
+
+die() { printf 'ctab: %s\n' "$1" >&2; exit 1; }
+warn() { printf 'ctab: %s\n' "$1" >&2; }
+first_line() { printf '%s\n' "$1" | head -1; }
+
+case "${1:-}" in
+  -h|--help)
+    awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "$0"
+    exit 0
+    ;;
+esac
+
+CMUX="${CMUX_BUNDLED_CLI_PATH:-cmux}"
+command -v "$CMUX" >/dev/null 2>&1 || die "cmux/c11 コマンドが PATH にない"
+[ -n "${CMUX_SOCKET_PATH:-${C11_SOCKET_PATH:-}}" ] \
+  || die "cmux/c11 の中でのみ使用可能（CMUX_SOCKET_PATH が無い）"
+
+# --- surface を決める -------------------------------------------------------
+# focused ではなく caller を使う。focused はオペレーターが今見ているペインで、
+# 自分自身とは限らない。
+caller_ref() {
+  "$CMUX" identify --json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    print(json.load(sys.stdin).get('caller', {}).get('surface_ref') or '')
+except Exception:
+    sys.exit(1)
+"
+}
+
+# ref: --surface に渡す識別子（UUID でも surface:N でもよい）
+ref="${CMUX_SURFACE_ID:-${C11_SURFACE_ID:-}}"
+[ -n "$ref" ] || ref=$(caller_ref)
+[ -n "$ref" ] || die "surface を特定できない（cmux/c11 の中で実行しているか確認）"
+
+# sref: tree の JSON と突き合わせる surface:N 形式。tree は UUID を出さない
+case "$ref" in
+  surface:[0-9]*) sref="$ref" ;;
+  *) sref=$(caller_ref) ;;
+esac
+
+# --- 現在のタイトルを読む（rename 前に必ず読む） ----------------------------
+# get-titlebar-state / set-description は c11 系にはあるが cmux 本家の
+# ビルドには無いことがある。無ければ tree --all --json の title で代替する。
+strip_marker() { sed -E 's/[[:space:]]*\[[a-z_]+\][[:space:]]*$//'; }
+
+title_from_tree() {
+  [ -n "$sref" ] || return 1
+  "$CMUX" tree --all --json 2>/dev/null | SREF="$sref" python3 -c "
+import json, os, sys
+sref = os.environ['SREF']
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+for w in data.get('windows', []):
+    for ws in w.get('workspaces', []):
+        for pane in ws.get('panes', []):
+            for surf in pane.get('surfaces', []):
+                if surf.get('ref') == sref:
+                    print(surf.get('title') or '')
+                    sys.exit(0)
+sys.exit(1)
+"
+}
+
+read_title() {
+  if [ "$has_titlebar_state" = 1 ]; then
+    "$CMUX" get-titlebar-state --surface "$ref" 2>/dev/null \
+      | sed -n 's/^title=//p' | strip_marker
+  else
+    title_from_tree
+  fi
+}
+
+has_titlebar_state=0
+cur_desc=""
+if state=$("$CMUX" get-titlebar-state --surface "$ref" 2>/dev/null); then
+  has_titlebar_state=1
+  cur_desc=$(printf '%s\n' "$state" | sed -n 's/^description=//p' | strip_marker)
+fi
+cur_title=$(read_title)
+
+# --- surface 番号を決める ---------------------------------------------------
+# 生きた情報（identify / surface ref）→ 環境変数 → 現タイトル の順。
+# 現タイトルを最後に置くのは、誤った番号が書き込まれたまま固定されないため。
+num=$(printf '%s\n' "$sref" | sed -nE 's/^surface:([0-9]+)$/\1/p')
+src="surface ref"
+if [ -z "$num" ]; then
+  # cmux 本家には無い。c11 が C11_SURFACE_NUM を出す
+  n="${CMUX_SURFACE_NUM:-${C11_SURFACE_NUM:-}}"
+  case "$n" in ''|*[!0-9]*) n="" ;; esac
+  [ -n "$n" ] && { num="$n"; src="環境変数"; }
+fi
+title_num=$(printf '%s\n' "$cur_title" | sed -nE 's/^\[([0-9]+)\].*/\1/p')
+if [ -z "$num" ] && [ -n "$title_num" ]; then
+  num="$title_num"; src="現タイトル"
+fi
+[ -n "$num" ] || src=""
+if [ -n "$title_num" ] && [ -n "$num" ] && [ "$title_num" != "$num" ]; then
+  warn "現タイトルの番号 [${title_num}] が実際の surface 番号 [${num}] と食い違っている（rename すると [${num}] に直る）"
+fi
+
+# --- 引数なし＝現状表示 -----------------------------------------------------
+if [ $# -eq 0 ]; then
+  printf 'surface : %s\n' "$ref"
+  printf '番号    : %s%s\n' "${num:-（不明）}" "${num:+（${src}から）}"
+  printf 'title   : %s\n' "${cur_title:-（読めない）}"
+  printf 'desc    : %s\n' "${cur_desc:-（未設定）}"
+  exit 0
+fi
+
+new="$1"
+[ -n "$new" ] || die "タイトルが空"
+
+# --- [NNN] を前置（すでに付いていれば検査してから通す） ---------------------
+given=$(printf '%s\n' "$new" | sed -nE 's/^\[([0-9]+)\].*/\1/p')
+if [ -n "$given" ]; then
+  if [ -n "$num" ] && [ "$given" != "$num" ]; then
+    die "渡されたタイトルの番号 [${given}] が実際の surface 番号 [${num}] と違うので rename しない（番号は付けずにタイトルだけ渡す）"
+  fi
+  title="$new"
+else
+  [ -n "$num" ] || die "surface 番号を解決できないので rename を中止する（番号を消さないため）"
+  title="[$num] $new"
+fi
+
+out=$("$CMUX" rename-tab --surface "$ref" "$title" 2>&1) \
+  || die "rename-tab に失敗: $(first_line "$out")"
+
+if [ $# -ge 2 ] && [ -n "$2" ]; then
+  if dout=$("$CMUX" set-description --surface "$ref" "$2" 2>&1); then
+    cur_desc="$2"
+  else
+    warn "説明は未設定のまま（set-description に失敗）: $(first_line "$dout")"
+  fi
+fi
+
+# --- 反映を読み直して確認 ---------------------------------------------------
+# ここから先の失敗は「書き込み済みだが確認できない」。書き込み前の中止と区別する
+got=$(read_title)
+printf '旧: %s\n新: %s\n' "$cur_title" "$got"
+if [ "$got" != "$title" ]; then
+  die "rename は実行済み（「${title}」を書き込んだ）が読み直しで確認できない。読めた値: ${got:-（空）}。再実行せず目視で確認する"
+fi
+if [ -n "$num" ] && ! printf '%s\n' "$got" | grep -qE "^\[$num\]"; then
+  die "rename は実行済みだがタイトルから surface 番号 [${num}] が消えている。目視で確認する"
+fi
