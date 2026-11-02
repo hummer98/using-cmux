@@ -58,7 +58,7 @@ cmux ターミナル操作のための Claude Code スキルパッケージ。
 
 ## 配布
 
-Plugin として配布する。`bin/` 配下のスクリプトは Claude Code が自動的に PATH に追加するため、ユーザー側でのセットアップは不要。skills/ commands/ も Plugin マニフェスト経由で読み込まれる。
+Plugin として配布する。`bin/` 配下のスクリプトは Plugin 有効時に Claude Code が Bash ツールの PATH に追加するため、`plugin.json` への宣言やユーザー側でのセットアップは不要。ただしユーザーの対話シェルの PATH には入らない（ターミナルから直接 `ctab` 等を打つと `command not found` になる）。skills/ commands/ も Plugin マニフェスト経由で読み込まれる。
 
 `/plugin update` 後、PATH に焼き込まれているのは旧バージョンのまま（セッション開始時に確定）。`bin/` の更新を反映するには cmux セッションの再起動が必要。
 

@@ -110,6 +110,18 @@ cmux-send --surface $SURF "command\n"
 cmux close-surface --surface $SURF
 ```
 
+cmux 0.64.23 以降は `cmux new-split right --command "command"` で作成と同時に実行でき、シェル起動前に send が届くレースを避けられる（`new-pane` / `new-surface` も同様）。c11 の `new-split` は未対応なので上の2ステップを使う。
+
+### TTY を占有するコマンドは Bash ツールで実行しない
+
+次のコマンドは **Bash ツールで直接実行せず、必ず別 surface に send する**。Bash ツールには対話端末が無いので、固まるか異常終了し、最悪の場合は実行中のセッションを巻き込む。
+
+- `claude` / `claude --resume <id>` / `cmux-team resume <id>` / `cmux-team conductor`
+- `ssh -t` / `vim` / `less` / `top`
+- `stdio: "inherit"` で子プロセスに端末を渡すスクリプト
+
+「status で弾かれるはず」「直接叩く方が速い」という予測を理由に自 shell へ縮約しない。ユーザーが「別 surface で」と指示したなら、結果が読めていても別 surface で実行する。
+
 ## サブエージェント操作パターン
 
 サブエージェントを起動し、タスクを委任し、結果を回収する一連の手順。
@@ -192,6 +204,8 @@ cmux close-workspace --workspace $WS                      # ワークスペー�
 > **重要**: `/exit` だけでは Claude プロセスが終了するだけでペイン（surface）は残る。必ず `close-workspace`（または `close-surface`）でペインも閉じること。`sleep 2` は `/exit` の処理完了を待つため。
 
 ## new-workspace の PTY 遅延初期化問題（Issue #1472）
+
+> cmux 本家では修正済み（send は 0.64.7、read は 0.65.0）。この節はそれより古い cmux 向け。
 
 `cmux new-workspace` で作成したワークスペースのターミナル PTY は、**GUI 上で一度表示されるまで起動しない**。
 `select-workspace` API だけでは不十分で、GUI 描画（SwiftUI レンダリング）が必要。
@@ -481,6 +495,7 @@ cmux browser $BSURF tab list / new / switch 2 / close 2        # タブ管理
 | `cmux-send "C-c"` や `cmux-send "\x03"` で Ctrl+C を送る | `cmux-send-key ctrl+c` を使う（制御キーの送信 参照） |
 | 「別 surface で」と言われたのに現在の surface で実行する | `cmux new-split` で新規 surface を作ってからそこで実行する |
 | 既存 surface を再利用する | 実行中プロセスや状態を破壊するリスクがあるため、原則 `new-split` で新規作成する |
+| `claude --resume` / `cmux-team resume` / `ssh -t` / `vim` を Bash ツールで直接実行する | `new-split` で別 surface を作り `cmux-send` で投入する |
 | ワークスペースに名前を付けない | `rename-workspace` で用途を示す名前を付ける |
 | `/exit` だけでクリーンアップ完了と思う | `/exit` → `sleep 2` → `close-workspace` / `close-surface` でペインも閉じる |
 
@@ -490,6 +505,7 @@ cmux browser $BSURF tab list / new / switch 2 / close 2        # タブ管理
 |---------|------|
 | `identify` / `tree` | 環境情報 / トポロジー表示 |
 | `list-workspaces` / `list-panes` / `list-pane-surfaces` | 一覧表示 |
+| `list-panes --json` | ペインの `columns` / `rows` / `pixel_frame` を取得（cmux 0.64.25 以降） |
 | `new-workspace` / `new-split <dir>` | ワークスペース・ペイン作成 |
 | `cmux-send` / `cmux-send-key` / `cmux-read` | 入出力操作（surface→workspace 自動解決ラッパー） |
 | `refresh-surfaces` | 画面バッファ強制更新 |

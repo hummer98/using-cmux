@@ -58,6 +58,8 @@ Skills, commands, and hooks are installed together.
 
 > Note: To pick up changes in the `bin/` wrapper scripts (`cmux-read` etc.), you must restart the cmux session. The plugin's `bin/` path is baked into PATH at session start.
 
+> Note: The `bin/` scripts are on the PATH of Claude Code's Bash tool only, not your own terminal. Typing `ctab` in zsh gives `command not found`; use `/ctab` from Claude Code instead.
+
 ### Option 2: Agent Skills (skills only)
 
 ```bash
