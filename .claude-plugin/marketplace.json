@@ -9,15 +9,26 @@
       "name": "using-cmux",
       "source": "./",
       "description": "Skill for operating cmux terminal multiplexer. Pane splitting, sub-agent spawning/monitoring/result collection, command sending, screen reading, and notifications.",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "author": {
         "name": "hummer98"
       },
       "repository": "https://github.com/hummer98/using-cmux",
       "license": "MIT",
-      "keywords": ["claude-skill", "cmux", "terminal", "sub-agent", "multiplexer"],
+      "keywords": [
+        "claude-skill",
+        "cmux",
+        "terminal",
+        "sub-agent",
+        "multiplexer"
+      ],
       "category": "terminal",
-      "tags": ["cmux", "terminal", "sub-agent", "multiplexer"]
+      "tags": [
+        "cmux",
+        "terminal",
+        "sub-agent",
+        "multiplexer"
+      ]
     }
   ]
 }
